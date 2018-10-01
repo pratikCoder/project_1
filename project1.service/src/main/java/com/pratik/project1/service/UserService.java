@@ -10,4 +10,11 @@ public interface UserService {
 	public UserAuth getUserAuthorizationByEmailId(String emailId) throws CommonException;
 
 	public UserModel addUser(UserModel userModel) throws CommonException;
+
+	public UserModel updateUser(UserModel userModel) throws CommonException;
+
+	public UserModel resetPassword(String oldPassword, String newPassword, String newConfirmPassword, Long userId)
+			throws CommonException;
+
+	public UserModel deleteUser(Long userId) throws CommonException;
 }

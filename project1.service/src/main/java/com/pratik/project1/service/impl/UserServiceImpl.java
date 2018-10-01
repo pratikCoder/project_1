@@ -38,13 +38,12 @@ public class UserServiceImpl implements UserService {
 
 	private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-	@SuppressWarnings("unused")
 	@Override
 	public Boolean validateUser(String emailId, String password) throws CommonException {
 		Boolean isValidUser = false;
 		UserEntity userEntity = null;
 		if (emailId.contains("@")) {
-			// userEntity = userJpaRepo.getUserByEmailId(emailId);
+			userEntity = userJpaRepo.getUserByUserEmailId(emailId);
 		}
 		if (userEntity == null) {
 			logger.error(ErrorMessages.USER_DOES_NOT_EXISTS + emailId);
@@ -124,6 +123,93 @@ public class UserServiceImpl implements UserService {
 		userModel.setPassword(null);
 
 		return userModel;
+	}
+
+	@Override
+	public UserModel updateUser(UserModel userModel) throws CommonException {
+		logger.debug("updateUser() :: userModel : {} ", userModel);
+
+		// UserServiceUtils.addUserModelValidate(userModel);
+
+		Date updatedDate = CommonUtils.currentDate();
+
+		UserEntity userEntity = new UserEntity();
+		System.out.println("Date" + updatedDate);
+
+		modelMapper.map(userModel, userEntity);
+
+		userEntity.setUpdatedDate(updatedDate);
+
+		System.out.println("==>" + userEntity.getCreatedDate());
+
+		userEntity = userJpaRepo.saveAndFlush(userEntity);
+		modelMapper.map(userEntity, userModel);
+		logger.debug("updateUser() :: userModel : {} ", userModel);
+
+		userModel.setConfirmPassword(null);
+		userModel.setPassword(null);
+
+		return userModel;
+	}
+
+	@Override
+	public UserModel resetPassword(String oldPassword, String newPassword, String newConfirmPassword, Long userId)
+			throws CommonException {
+		logger.debug("resetPassword() :: userId : oldPassword : newPassword : newConfirmPassword : {} ", userId,
+				oldPassword, newPassword, newConfirmPassword);
+
+		// UserServiceUtils.addUserModelValidate(userModel);
+
+		Date updatedDate = CommonUtils.currentDate();
+
+		UserEntity userEntity = new UserEntity();
+		UserModel userModel = new UserModel();
+		System.out.println("Date" + updatedDate);
+
+		userEntity = userJpaRepo.getOne(userId);
+
+		userEntity.setUpdatedDate(updatedDate);
+
+		System.out.println("==>" + userEntity.getCreatedDate());
+
+		String oldPassEncrypt = passwordEncoder.encode(oldPassword);
+		if (oldPassEncrypt.equals(userEntity.getPassword())) {
+			String encryptPassword = passwordEncoder.encode(newPassword);
+			userEntity.setPassword(encryptPassword);
+		}
+
+		userEntity = userJpaRepo.saveAndFlush(userEntity);
+		modelMapper.map(userEntity, userModel);
+		logger.debug("resetPassword() :: userModel : {} ", userModel);
+
+		userModel.setConfirmPassword(null);
+		userModel.setPassword(null);
+
+		return userModel;
+	}
+
+	@Override
+	public UserModel deleteUser(Long userId) throws CommonException {
+		logger.debug("deleteUser() :: userId : {} ", userId);
+
+		Date updatedDate = CommonUtils.currentDate();
+		UserEntity userEntity = new UserEntity();
+		UserModel userModel = new UserModel();
+
+		userEntity = userJpaRepo.getOne(userId);
+
+		userEntity.setUpdatedDate(updatedDate);
+		userEntity.setIsActive(false);
+
+		userEntity = userJpaRepo.saveAndFlush(userEntity);
+		modelMapper.map(userEntity, userModel);
+		logger.debug("deleteUser() :: userModel : {} ", userModel);
+
+		userModel.setConfirmPassword(null);
+		userModel.setPassword(null);
+
+		return userModel;
+
 	}
 
 }
